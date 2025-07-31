@@ -28,12 +28,12 @@ This guide covers:
 helm repo add superset https://apache.github.io/superset
 helm repo update
 
-
+```
 ## 🔧 Step 2: View charts in repo
 
 ```bash
 helm search repo superset
-
+```
 # Output
 NAME                    CHART VERSION   APP VERSION     DESCRIPTION
 superset/superset       0.1.1           1.0             Apache Superset is a modern, enterprise-ready b..
@@ -47,7 +47,7 @@ superset/superset       0.1.1           1.0             Apache Superset is a mod
 
 helm upgrade --install superset superset/superset -n superset --create-namespace --values my-values.yaml --timeout 20m
 
-
+```
 ## step5: create Confidential information kubernates env 
 
 ```bash
@@ -56,9 +56,9 @@ kubectl create secret generic superset-db-creds --from-literal=DB_USER='<your-db
 
 
  kubectl create secret generic superset-secret --from-literal=secret-key='<your-secret-key>' --namespace superset
+```
 
-
-Example :
+#Example :
 
 
 kubectl create secret generic superset-db-creds --from-literal=DB_PASS='PassW%40rEP%24qlSs' --namespace superset
@@ -71,25 +71,25 @@ kubectl create secret generic superset-db-creds --from-literal=DB_PASS='PassW%40
 
 kubectl delete secret superset-db-creds -n superset
 kubectl create secret generic superset-db-creds -n superset --from-literal=DB_PASS="MyPassword"
-
+```
 ## step7: Verify Secrets
 
 ```bash
 
 kubectl get secret superset-db-creds -n superset -o yaml
-
+```
 ## step 8: verify Superset Configuration
 
 ```bash
 
 helm template superset superset/superset -n superset --values my-values.yaml > rendered.yaml
-
+```
 ## step9: Run Superset
 
 ```bash
 
 helm upgrade --install superset superset/superset -n superset --create-namespace --values my-values.yaml --timeout 20m
-
+```
 
 
 
