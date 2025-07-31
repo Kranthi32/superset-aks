@@ -1,0 +1,142 @@
+image:
+  repository: <your-docker-username>/superset-full
+  tag: 4.1.2
+  pullPolicy: Always
+
+webserverExpose: true
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
+
+postgresql:
+  enabled: false
+
+extraSecretEnv:
+  SUPERSET_SECRET_KEY: "<your-secret-key>"
+
+envFromSecrets:
+  - superset-db-creds
+
+supersetNode:
+  connections:
+    db_host: <your-db-host>
+    db_port: "5432"
+    db_user: <your-db-user>
+    db_name: superset
+    extraArgs: "?sslmode=require"
+    redis_host: superset-redis-master
+    redis_port: "6379"
+    redis_cache_db: "1"
+    redis_celery_db: "0"
+  extraEnv:
+    - name: DB_HOST
+      value: <your-db-host>
+    - name: DB_PORT
+      value: "5432"
+    - name: DB_USER
+      value: <your-db-user>
+    - name: DB_NAME
+      value: superset
+
+supersetWorker:
+  extraEnv: []
+
+supersetCeleryWorker:
+  extraEnv: []
+
+supersetCeleryBeat:
+  extraEnv: []
+
+configOverrides:
+  superset_config.py: |
+    import os
+    from urllib.parse import quote_plus
+    from flask_caching import Cache
+
+    ENABLE_PROXY_FIX = True
+    SUPERSET_WEBSERVER_BASEURL = "https://<your-domain>"
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_TRUSTED_ORIGINS = ["https://<your-domain>", "http://<your-domain>"]
+
+    DB_USER = os.getenv("DB_USER")
+    DB_PASS = os.getenv("DB_PASS")
+    DB_HOST = os.getenv("DB_HOST")
+    DB_PORT = os.getenv("DB_PORT")
+    DB_NAME = os.getenv("DB_NAME")
+
+    SQLALCHEMY_DATABASE_URI = (
+        f"postgresql+psycopg2://{quote_plus(DB_USER)}:{quote_plus(DB_PASS)}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
+    )
+
+    RESULTS_BACKEND = Cache(
+        config={
+            'CACHE_TYPE': 'RedisCache',
+            'CACHE_DEFAULT_TIMEOUT': 300,
+            'CACHE_KEY_PREFIX': 'superset_results',
+            'CACHE_REDIS_URL': 'redis://superset-redis-master:6379/0'
+        }
+    )
+
+    FILTER_STATE_CACHE_CONFIG = {
+        "CACHE_TYPE": "RedisCache",
+        "CACHE_DEFAULT_TIMEOUT": 300,
+        "CACHE_KEY_PREFIX": "superset_filter_state",
+        "CACHE_REDIS_URL": "redis://superset-redis-master:6379/0"
+    }
+
+    EXPLORE_FORM_DATA_CACHE_CONFIG = {
+        "CACHE_TYPE": "RedisCache",
+        "CACHE_DEFAULT_TIMEOUT": 300,
+        "CACHE_KEY_PREFIX": "superset_explore_form",
+        "CACHE_REDIS_URL": "redis://superset-redis-master:6379/0"
+    }
+
+    TALISMAN_ENABLED = False
+    TALISMAN_CONFIG = {
+        "content_security_policy": {
+            "default-src": ["'self'"],
+            "img-src": ["'self'", "data:", "blob:"],
+        }
+    }
+
+    SUPERSET_WEBSERVER_TIMEOUT = 300
+    SUPERSET_WEBSERVER_ADDRESS = "0.0.0.0"
+
+service:
+  type: ClusterIP
+  port: 8088
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  path: /
+  pathType: Prefix
+  hosts:
+    - <your-domain>
+  tls:
+    - secretName: superset-tls
+      hosts:
+        - <your-domain>
+
+init:
+  createAdmin: true
+  adminUser:
+    username: admin
+    firstname: Superset
+    lastname: Admin
+    email: <your-email>
+    password: <your-admin-password>
+  loadExamples: false
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
