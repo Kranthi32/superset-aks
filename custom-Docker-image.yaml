@@ -1,0 +1,35 @@
+FROM apache/superset:4.1.2
+
+USER root
+
+# Install base tools and dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    unixodbc-dev \
+    curl \
+    gnupg2 \
+    apt-transport-https \
+    software-properties-common
+
+# Add Microsoft GPG key and repository (Debian 12 - bookworm)
+RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | \
+    gpg --dearmor > /usr/share/keyrings/microsoft.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" \
+    > /etc/apt/sources.list.d/mssql-release.list
+
+# Install msodbcsql18
+RUN apt-get update && \
+    ACCEPT_EULA=Y apt-get install -y msodbcsql18
+
+# Install Python drivers including MSSQL plugin support
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir \
+        redis \
+        psycopg2-binary \
+        pyodbc \
+        'apache-superset[sql_server]' && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+USER superset
