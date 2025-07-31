@@ -145,6 +145,85 @@ kubectl delete pods --all -n superset
 ```
 
 
+## 📦 Custom Superset Docker Image (MSSQL, PostgreSQL, Redis)
+---
+refer custom image Docker file 
+# redirect to custom image Docker file yaml path execute below commands
+```bash
+docker build -t <your-username>/superset-full:4.1.2 .
+docker push <your-username>/superset-full:4.1.2
+```
+
+
+##  Updaet  Superset
+
+```bash
+
+helm upgrade --install superset superset/superset -n superset --create-namespace --values my-values.yaml --timeout 20m
+```
+
+## Nginx Ingress Load Balencer Configuration
+
+----
+
+## 🌐 NGINX Ingress Controller + Load Balancer Setup
+
+### 📦 Step 1: Connect to AKS Cluster
+
+```bash
+az aks get-credentials --resource-group <your-resource-group> --name <your-aks-cluster>
+```
+## 🌍 Step 2: Install Ingress NGINX via Helm
+
+
+```bash
+
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+kubectl create namespace ingress-nginx
+
+helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx
+
+```
+
+## 🔎 Step 3: Get Ingress LoadBalancer IP
+
+```bash
+kubectl get svc -n ingress-nginx
+
+```
+# Look for the EXTERNAL-IP under ingress-nginx-controller. This is used to access Superset externally.
+
+## 🧭 Step 4: Verify Superset Ingress
+
+```bash
+kubectl get ingress -n superset
+```
+# Output should show a valid host like:
+
+superset.20.235.237.100.nip.io
+Note: Ensure your my-values.yaml uses this hostname in the ingress section.
+
+
+## 🐚 Step 5: Troubleshooting / Debugging
+Check Ingress NGINX logs:
+```bash
+kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller
+```
+---
+Enter the Superset pod:
+```bash
+kubectl exec -it <superset-pod-name> -n superset -- /bin/bash
+
+## ✅ Final Check
+# Superset should now be accessible at:
+
+```bash
+http://<external-ip> or http://superset.<external-ip>.nip.io
+```
+
+
+
 
 
 
