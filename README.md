@@ -91,6 +91,61 @@ helm template superset superset/superset -n superset --values my-values.yaml > r
 helm upgrade --install superset superset/superset -n superset --create-namespace --values my-values.yaml --timeout 20m
 ```
 
+# first time this step will take Minimum 15 minutes Time
+
+## step10: port forward
+
+```bash
+ kubectl port-forward svc/superset -n superset 8088:8088
+```
+
+
+## step11: Verify Pods
+
+```bash
+
+kubectl get pods -n superset
+
+```
+
+
+## ⚙️ Get Pods, Services, and Cluster IP
+
+```bash
+# Get services with ports and Cluster IPs
+kubectl get svc -n superset
+
+# Get running Superset pods
+kubectl get pods -n superset
+
+```
+
+
+## 📦 Check Superset Version
+
+
+```bash
+
+kubectl exec -it -n superset <your-superset-pod-name> -- superset version
+```
+
+## 🔐 Reset Admin Password
+```bash
+kubectl exec -it -n superset <your-superset-pod-name> -- superset fab reset-password --username admin
+```
+---
+You'll be prompted to enter a new password.
+## ♻️ Uninstall & Clean Reinstall Superset
+
+```bash
+helm uninstall superset -n superset
+kubectl delete pvc --all -n superset
+kubectl delete pods --all -n superset
+
+```
+
+
+
 
 
 
