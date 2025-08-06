@@ -223,6 +223,17 @@ http://<external-ip> or http://superset.<external-ip>.nip.io
 ```
 
 
+## 🐚 Step 6: Apply SSL
+Get  pem and key files and store in any folder and redirect to taht folder
+
+```bash
+kubectl create secret tls superset-tls --cert=superset.pem --key=caresoftglobal2024.server.nopass.key --namespace superset
+```
+---
+finally update hel with myvalues.yaml:
+```bash
+
+
 
 
 
